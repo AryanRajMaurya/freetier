@@ -1,0 +1,30 @@
+name: Limits sync
+
+# The page renders data/limits.json, which is asserted in the shipfree
+# repository and re-checked there against the platforms' own documentation.
+# This workflow makes sure the copy on the page has not fallen behind.
+
+on:
+  schedule:
+    # Wednesdays at 05:41 UTC.
+    - cron: "41 5 * * 3"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check the data is in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check data/limits.json against shipfree
+        run: python tools/sync_limits.py --check

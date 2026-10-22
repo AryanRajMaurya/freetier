@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Will It Fit? — the free-tier planner for AI services</title>
+<meta name="description" content="Every free tier is a different shape. Check whether your AI service fits inside Cloudflare Workers, Durable Objects, D1, KV, R2 and Queues before you ship it." />
+<meta property="og:title" content="Will It Fit? — the free-tier planner for AI services" />
+<meta property="og:description" content="Free-tier limits for AI services, verified against upstream documentation by CI." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./assets/style.css" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">freetier</p>
+    <h1>Will it fit?</h1>
+    <p class="lede">
+      A free tier is not a smaller paid tier. It is a <em>different shape</em>.
+      Some work fits it beautifully — streaming a model response costs almost no
+      CPU, because time spent waiting on a socket is not CPU time — and other
+      work cannot fit at all, no matter how you arrange it.
+    </p>
+    <p class="lede sub">
+      Here are the limits that decide the answer, checked against the
+      platforms' own documentation by CI rather than remembered.
+    </p>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+
+  <section class="status" id="status" aria-live="polite">
+    <div class="status-row">
+      <span class="dot" id="status-dot" aria-hidden="true"></span>
+      <p id="status-text">Loading verified limits…</p>
+    </div>
+    <p class="status-note" id="status-note"></p>
+  </section>
+
+  <section class="cta">
+    <div class="cta-inner">
+      <h2>Want your agent to do this for you?</h2>
+      <p>
+        <code>shipfree</code> is the Agent Skill version of this page. It teaches
+        any AI coding agent how to deploy an AI service on a free tier — the
+        limits, the architecture that fits inside them, and the traps.
+      </p>
+      <pre><code>/plugin marketplace add AryanRajMaurya/shipfree
+/plugin install shipfree@shipfree</code></pre>
+      <p class="cta-links">
+        <a href="https://github.com/AryanRajMaurya/shipfree">shipfree on GitHub</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://github.com/AryanRajMaurya/shipfree/blob/main/limits.json">the raw data</a>
+      </p>
+    </div>
+  </section>
+
+  <section aria-labelledby="matrix-heading">
+    <h2 id="matrix-heading">Pick a platform</h2>
+    <div class="table-wrap">
+      <table class="matrix" id="matrix">
+        <caption class="sr-only">Comparison of free hosting platforms for AI services</caption>
+        <thead>
+          <tr>
+            <th scope="col">Platform</th>
+            <th scope="col">Best for</th>
+            <th scope="col">WebSockets</th>
+            <th scope="col">Streaming</th>
+            <th scope="col">Card</th>
+            <th scope="col">Cold start</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="limits-heading">
+    <div class="section-head">
+      <h2 id="limits-heading">The limits that actually bite</h2>
+      <label class="search">
+        <span class="sr-only">Filter limits</span>
+        <input type="search" id="filter" placeholder="Filter by limit, value or note…" autocomplete="off" />
+      </label>
+    </div>
+    <p class="section-note">
+      Every number below is asserted in a single file and re-checked against
+      upstream documentation on every push. When a limit moves, the build fails
+      and the drift is reported.
+    </p>
+    <div id="limits"></div>
+  </section>
+
+  <section aria-labelledby="calc-heading" class="calc-section" id="calc">
+    <h2 id="calc-heading">Will <em>your</em> workload fit?</h2>
+    <div class="calc">
+      <form class="calc-form" id="calc-form">
+        <label>
+          <span>Requests per day</span>
+          <input type="number" id="c-req" value="10000" min="0" step="1000" inputmode="numeric" />
+        </label>
+        <label>
+          <span>CPU per request (ms)</span>
+          <input type="number" id="c-cpu" value="5" min="0" step="1" inputmode="numeric" />
+        </label>
+        <label>
+          <span>State to persist (MB)</span>
+          <input type="number" id="c-state" value="10" min="0" step="10" inputmode="numeric" />
+        </label>
+        <label>
+          <span>Realtime (WebSocket)?</span>
+          <select id="c-rt">
+            <option value="no">No — plain HTTP</option>
+            <option value="yes">Yes — needs sockets</option>
+          </select>
+        </label>
+      </form>
+      <div class="calc-out" id="calc-out" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="more-heading">
+    <h2 id="more-heading">What breaks, and what to do about it</h2>
+    <div class="cards">
+      <article class="card">
+        <h3>10 ms of CPU is not 10 ms of wall clock</h3>
+        <p>
+          Time spent waiting on a socket is not CPU time. A
+          <code>fetch()</code> to a slow model costs almost nothing even when
+          the model takes eight seconds to answer. What costs CPU is work:
+          JSON parsing, string manipulation, crypto.
+        </p>
+        <p class="card-fix">So: stream the response. Never buffer it.</p>
+      </article>
+      <article class="card">
+        <h3>Durable Objects are the escape hatch</h3>
+        <p>
+          30 seconds of CPU per request against a Worker's 10 ms. Anything
+          stateful, anything realtime, anything that needs real sockets goes
+          in a Durable Object. Use the WebSocket Hibernation API so an idle
+          agent session is not billed.
+        </p>
+      </article>
+      <article class="card">
+        <h3>Queues get five minutes of CPU</h3>
+        <p>
+          A queue consumer gets 5 minutes against a Worker's 10 ms — thirty
+          thousand times more. Embedding, summarising, scraping and
+          transcoding belong in a queue, never in the request path.
+        </p>
+      </article>
+      <article class="card">
+        <h3>Reads are cheap, writes are not</h3>
+        <p>
+          KV gives you 100,000 reads a day and 1,000 writes a day, and only one
+          write per second to any single key. That asymmetry is the trap. KV is
+          a cache; D1 is a database.
+        </p>
+      </article>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap foot">
+  <p>
+    Built by <a href="https://github.com/AryanRajMaurya">Aryan Raj Maurya</a>.
+    Data and the verification harness live in
+    <a href="https://github.com/AryanRajMaurya/shipfree">shipfree</a>.
+  </p>
+  <p class="foot-note">
+    Limits change without warning. Check the upstream documentation before
+    you rely on any number here.
+  </p>
+</footer>
+
+<script src="./assets/app.js" type="module"></script>
+</body>
+</html>

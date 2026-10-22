@@ -1,0 +1,277 @@
+{
+  "$comment": [
+    "Single source of truth for every free-tier limit asserted by the shipfree skill.",
+    "Every value was read from the upstream documentation and is re-verified by",
+    "harness/check_limits.py against the platform's own documentation source.",
+    "Do not hand-edit a 'value' field to silence a drift report: update the",
+    "upstream reading, then re-run the checker.",
+    "'doc_label' scopes a value to one upstream table row so a value that is",
+    "removed or renamed is reported as drift rather than passing silently.",
+    "'doc_key' selects a secondary document for platforms that split their",
+    "limits across more than one page."
+  ],
+  "schema_version": 2,
+  "verified_on": "2026-10-22",
+  "sources": {
+    "cloudflare_docs": {
+      "repo": "cloudflare/cloudflare-docs",
+      "ref": "production",
+      "base": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/production/src/content/docs/"
+    }
+  },
+  "limits": {
+    "workers": {
+      "title": "Cloudflare Workers (Free plan)",
+      "doc": "workers/platform/limits.mdx",
+      "url": "https://developers.cloudflare.com/workers/platform/limits/",
+      "doc_labels": {
+        "requests_per_day": "Requests",
+        "cpu_time_per_invocation": "CPU time",
+        "subrequests_per_invocation": "Subrequests",
+        "simultaneous_outgoing_connections": "Simultaneous outgoing connections",
+        "environment_variables": "Environment variables",
+        "worker_size": "Worker size",
+        "worker_startup_time": "Worker startup time",
+        "workers_per_account": "Number of Workers",
+        "cron_triggers_per_account": "Number of Cron Triggers"
+      },
+      "values": {
+        "requests_per_day": { "value": "100,000/day", "note": "Resets at 00:00 UTC. Exceeding it returns Cloudflare error 1027. You can choose fail-open or fail-closed routing." },
+        "cpu_time_per_invocation": { "value": "10 ms", "note": "The single most important number on this page, and the reason most AI workloads do not belong in a free Worker. The paid plan allows 5 minutes." },
+        "memory": { "value": "128 MB", "note": "" },
+        "subrequests_per_invocation": { "value": "50", "note": "Subrequests to internal services (KV, D1, R2) have their own, larger budget of 1,000." },
+        "simultaneous_outgoing_connections": { "value": "6", "note": "Relevant when proxying to several model APIs at once." },
+        "environment_variables": { "value": "64/Worker", "note": "5 KB per value." },
+        "worker_size": { "value": "64 MiB", "note": "" },
+        "worker_startup_time": { "value": "1 second", "note": "" },
+        "workers_per_account": { "value": "100", "note": "" },
+        "cron_triggers_per_account": { "value": "5", "note": "" },
+        "request_body_size": { "value": "100 MB", "note": "Set by the Cloudflare account plan, not by the Workers plan." },
+        "response_body_size": { "value": "No enforced limit", "note": "Response body size is not capped by the Workers plan." }
+      }
+    },
+    "durable_objects": {
+      "title": "Cloudflare Durable Objects",
+      "doc": "durable-objects/platform/limits.mdx",
+      "url": "https://developers.cloudflare.com/durable-objects/platform/limits/",
+      "extra_docs": {
+        "pricing": "durable-objects/platform/pricing.mdx"
+      },
+      "doc_labels": {
+        "max_classes_per_account": "Maximum Durable Object classes",
+        "storage_per_account": "Storage per account",
+        "storage_per_durable_object": "Storage per Durable Object",
+        "cpu_per_request": "CPU per request",
+        "websocket_message_size": "WebSocket message size",
+        "key_value_size": "Key size",
+        "number_of_objects": "Number of Objects"
+      },
+      "values": {
+        "max_classes_per_account": { "value": "100 (Free)", "note": "Workers Paid allows 500." },
+        "storage_per_account": { "value": "5GB (Free)", "note": "Unlimited on Workers Paid. Storage is measured in GB (1 GB = 1,000,000,000 bytes), not GiB." },
+        "storage_per_durable_object": { "value": "10 GB", "note": "" },
+        "number_of_objects": { "value": "Unlimited", "note": "Within an account or of a given class." },
+        "cpu_per_request": { "value": "30 seconds (default)", "note": "This is the escape hatch from the 10 ms Worker limit: every incoming request or WebSocket message resets the CPU budget to 30 seconds, configurable up to 5 minutes of active CPU time." },
+        "websocket_message_size": { "value": "32 MiB", "note": "Applies to received messages only." },
+        "key_value_size": { "value": "2 MB", "note": "Key and value combined." },
+        "free_tier_reset": { "value": "Daily free limits reset at 00:00 UTC", "note": "Free-tier Durable Object limits are daily, not monthly.", "doc_key": "pricing" },
+        "included_requests_per_month": { "value": "1,000,000", "note": "The included allocation on the Workers Paid plan.", "doc_key": "pricing" },
+        "included_duration_gb_s_per_month": { "value": "400,000 GB-s", "note": "Duration is billed in GB-seconds: seconds multiplied by memory in GB.", "doc_key": "pricing" },
+        "price_per_million_requests": { "value": "$0.15", "note": "Charged beyond the included allocation on Workers Paid.", "doc_key": "pricing" },
+        "pending_io_holds_memory": { "value": "15 minutes", "note": "A pending I/O operation keeps the object resident, and billable, for up to 15 minutes.", "doc_key": "pricing" }
+      }
+    },
+    "d1": {
+      "title": "Cloudflare D1 (Free plan)",
+      "doc": "d1/platform/limits.mdx",
+      "url": "https://developers.cloudflare.com/d1/platform/limits/",
+      "doc_labels": {
+        "databases_per_account": "Databases per account",
+        "max_database_size": "Maximum database size",
+        "max_storage_per_account": "Maximum storage per account",
+        "queries_per_worker_invocation": "Queries per Worker invocation",
+        "time_travel_retention": "Time Travel duration",
+        "max_row_size": "Maximum string, BLOB or table row size",
+        "max_sql_statement_length": "Maximum SQL statement length",
+        "max_bound_parameters": "Maximum bound parameters per query",
+        "max_query_duration": "Maximum SQL query duration",
+        "max_restore_operations": "Maximum Time Travel restore operations"
+      },
+      "values": {
+        "databases_per_account": { "value": "10 (Free)", "note": "Workers Paid allows 50,000." },
+        "max_database_size": { "value": "500 MB (Free)", "note": "Workers Paid allows 10 GB." },
+        "max_storage_per_account": { "value": "5 GB (Free)", "note": "Workers Paid allows 1 TB." },
+        "queries_per_worker_invocation": { "value": "50 (Free)", "note": "Workers Paid allows 1,000. This is the D1-specific budget: a free Worker may only issue 50 D1 queries per request, so batch reads into a single call instead of looping." },
+        "time_travel_retention": { "value": "7 days", "note": "Point-in-time recovery window. Workers Paid allows 30 days." },
+        "max_row_size": { "value": "2,000,000 bytes (2 MB)", "note": "Maximum string, BLOB or table row size." },
+        "max_sql_statement_length": { "value": "100,000 bytes (100 KB)", "note": "" },
+        "max_bound_parameters": { "value": "100", "note": "" },
+        "max_query_duration": { "value": "30 seconds", "note": "" },
+        "max_restore_operations": { "value": "10 restores per 10 minutes", "note": "Per database." }
+      }
+    },
+    "kv": {
+      "title": "Cloudflare Workers KV (Free plan)",
+      "doc": "kv/platform/limits.mdx",
+      "url": "https://developers.cloudflare.com/kv/platform/limits/",
+      "doc_labels": {
+        "reads_per_day": "Reads",
+        "writes_to_different_keys_per_day": "Writes to different keys",
+        "writes_to_same_key": "Writes to same key",
+        "storage_per_account": "Storage/account",
+        "storage_per_namespace": "Storage/namespace",
+        "value_size": "Value size",
+        "key_size": "Key size",
+        "operations_per_invocation": "Operations/Worker invocation",
+        "namespaces_per_account": "Namespaces per account",
+        "minimum_cache_ttl": "Minimum cacheTtl"
+      },
+      "values": {
+        "reads_per_day": { "value": "100,000 reads per day", "note": "" },
+        "writes_to_different_keys_per_day": { "value": "1,000 writes per day", "note": "The asymmetry with reads is the trap: reading a cached value is cheap, persisting state is not. Use KV as a cache, not as a database." },
+        "writes_to_same_key": { "value": "1 per second", "note": "Applies to every plan." },
+        "storage_per_account": { "value": "1 GB", "note": "" },
+        "storage_per_namespace": { "value": "1 GB", "note": "" },
+        "value_size": { "value": "25 MiB", "note": "" },
+        "key_size": { "value": "512 bytes", "note": "" },
+        "operations_per_invocation": { "value": "1000", "note": "" },
+        "namespaces_per_account": { "value": "1,000", "note": "" },
+        "minimum_cache_ttl": { "value": "30 seconds", "note": "The smallest value you can pass to cacheTtl." }
+      }
+    },
+    "r2": {
+      "title": "Cloudflare R2 (Free tier)",
+      "doc": "r2/pricing.mdx",
+      "url": "https://developers.cloudflare.com/r2/pricing/",
+      "doc_labels": {
+        "egress": "Egress (data transfer to Internet)"
+      },
+      "values": {
+        "storage": { "value": "10 GB-month / month", "note": "Billed on the average peak storage per day across the billing period. Standard storage only." },
+        "class_a_operations": { "value": "1 million requests / month", "note": "List, Put, Copy and similar metadata operations." },
+        "class_b_operations": { "value": "10 million requests / month", "note": "Get and similar read operations." },
+        "egress": { "value": "Free", "note": "The reason to prefer R2 over S3 on a free tier: there is no egress charge at all." },
+        "infrequent_access_storage": { "value": "does not apply to Infrequent Access storage", "note": "The free tier covers Standard storage only." }
+      }
+    },
+    "queues": {
+      "title": "Cloudflare Queues",
+      "doc": "queues/platform/limits.mdx",
+      "url": "https://developers.cloudflare.com/queues/platform/limits/",
+      "doc_labels": {
+        "queues_per_account": "Queues",
+        "message_size": "Message size",
+        "message_retries": "Message retries",
+        "max_consumer_batch_size": "Maximum consumer batch size",
+        "max_send_batch": "Maximum messages per sendBatch call",
+        "per_queue_throughput": "Per-queue message throughput",
+        "message_retention": "Message retention period",
+        "per_queue_backlog": "Per-queue backlog size",
+        "concurrent_consumer_invocations": "Concurrent consumer invocations",
+        "consumer_wall_clock_duration": "Consumer duration",
+        "consumer_cpu_time": "Consumer CPU time",
+        "visibility_timeout": "visibilityTimeout",
+        "delay_seconds": "delaySeconds"
+      },
+      "values": {
+        "queues_per_account": { "value": "10,000 per account", "note": "" },
+        "message_size": { "value": "128 KB", "note": "Around 100 bytes of that is internal metadata." },
+        "message_retries": { "value": "100", "note": "" },
+        "max_consumer_batch_size": { "value": "100 messages", "note": "" },
+        "max_send_batch": { "value": "100 (or 256KB in total)", "note": "" },
+        "per_queue_throughput": { "value": "5,000 messages per second", "note": "" },
+        "message_retention": { "value": "Configurable up to 14 days", "note": "" },
+        "per_queue_backlog": { "value": "25GB", "note": "" },
+        "concurrent_consumer_invocations": { "value": "250 push-based only", "note": "" },
+        "consumer_wall_clock_duration": { "value": "15 minutes", "note": "" },
+        "consumer_cpu_time": { "value": "Configurable to 5 minutes", "note": "A queue consumer gets far more CPU time than an ordinary Worker. Run heavy work here rather than in the request path." },
+        "visibility_timeout": { "value": "12 hours", "note": "Pull-based queues." },
+        "delay_seconds": { "value": "24 hours", "note": "When sending or retrying." }
+      }
+    },
+    "workers_ai": {
+      "title": "Cloudflare Workers AI (free allocation)",
+      "doc": "workers-ai/platform/pricing.mdx",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+      "extra_docs": {
+        "limits": "workers-ai/platform/limits.mdx"
+      },
+      "values": {
+        "free_neurons_per_day": { "value": "10,000 Neurons per day", "note": "Resets at 00:00 UTC. Exceeding it fails further operations." },
+        "price_per_1000_neurons": { "value": "$0.011 per 1,000 Neurons", "note": "On the Workers Paid plan, above the free allocation." },
+        "text_generation_requests_per_minute": { "value": "300 requests per minute", "note": "Unless the model requires the Workers Paid plan.", "doc_key": "limits" },
+        "embeddings_requests_per_minute": { "value": "3000 requests per minute", "note": "The bge-large-en-v1.5 model is limited to 1500.", "doc_key": "limits" },
+        "summarization_requests_per_minute": { "value": "1500 requests per minute", "note": "", "doc_key": "limits" },
+        "image_to_text_requests_per_minute": { "value": "720 requests per minute", "note": "", "doc_key": "limits" },
+        "asr_requests_per_minute": { "value": "720 requests per minute", "note": "", "doc_key": "limits" },
+        "object_detection_requests_per_minute": { "value": "3000 requests per minute", "note": "", "doc_key": "limits" },
+        "text_classification_requests_per_minute": { "value": "2000 requests per minute", "note": "", "doc_key": "limits" },
+        "paid_only_models": { "value": "@cf/moonshotai/kimi-k2.6, @cf/moonshotai/kimi-k2.7-code, @cf/zai-org/glm-5.2, @cf/zai-org/glm-5.3, @cf/zai-org/glm-5.3-flash, @cf/deepseek-ai/deepseek-v4-flash-0731, @cf/deepseek-ai/deepseek-v4.1-flash-1017, and @cf/deepseek-ai/deepseek-v4-pro-0813", "note": "These require a Workers Paid plan or prepaid AI Gateway credits, so they are not available on a strictly free account. The list is asserted verbatim so that adding or removing a model is reported as drift." }
+      }
+    },
+    "vercel": {
+      "title": "Vercel Hobby",
+      "doc": null,
+      "url": "https://vercel.com/docs/limits",
+      "values": {
+        "projects": { "value": "200", "note": "Pro and Enterprise are unlimited." },
+        "deployments_per_day": { "value": "100", "note": "Pro allows 6,000." },
+        "proxied_request_timeout": { "value": "120 seconds", "note": "Applies to every plan. A long-lived WebSocket connection follows a different path from a proxied request." },
+        "routes_per_deployment": { "value": "2048", "note": "" },
+        "build_time_per_deployment": { "value": "45 minutes", "note": "" },
+        "static_file_uploads": { "value": "100 MB", "note": "Pro allows 1 GB." },
+        "concurrent_deployments": { "value": "1", "note": "Pro allows up to 500." },
+        "disk_size": { "value": "32 GB", "note": "" },
+        "cron_jobs_per_project": { "value": "100", "note": "" },
+        "deploy_hooks_per_project": { "value": "5", "note": "" }
+      }
+    }
+  },
+  "platform_matrix": [
+    {
+      "platform": "Cloudflare Workers",
+      "best_for": "Streaming AI APIs and realtime agents that must stay free at volume",
+      "has_websockets": "yes, via Durable Objects",
+      "has_streaming": "yes, native",
+      "needs_credit_card": "no",
+      "cold_start": "none",
+      "notes": "Free egress on R2, no cold starts, and Durable Objects give 30 seconds of CPU per request instead of 10 ms. This is the only platform in the list where a realtime voice agent is genuinely free to run."
+    },
+    {
+      "platform": "Vercel",
+      "best_for": "Next.js front ends and quick API routes",
+      "has_websockets": "no on serverless functions",
+      "has_streaming": "yes on the Edge runtime",
+      "needs_credit_card": "no",
+      "cold_start": "yes",
+      "notes": "120 second proxied request timeout and 100 deployments per day. WebSocket support needs a dedicated server, which the Hobby plan does not include."
+    },
+    {
+      "platform": "Hugging Face Spaces",
+      "best_for": "Public model demos with a Gradio or Docker UI",
+      "has_websockets": "limited",
+      "has_streaming": "yes",
+      "needs_credit_card": "no",
+      "cold_start": "sleeps after inactivity",
+      "notes": "The fastest way to publish a model demo. Spaces sleep when idle, so the first request after a pause is slow."
+    },
+    {
+      "platform": "Render",
+      "best_for": "Long-running containers that need real sockets",
+      "has_websockets": "yes",
+      "has_streaming": "yes",
+      "needs_credit_card": "yes",
+      "cold_start": "spins down when idle",
+      "notes": "Real WebSocket support without Durable Objects, but the free instance spins down after inactivity and the card requirement rules it out for a strictly free setup."
+    },
+    {
+      "platform": "Fly.io",
+      "best_for": "Container workloads placed close to users",
+      "has_websockets": "yes",
+      "has_streaming": "yes",
+      "needs_credit_card": "yes",
+      "cold_start": "no",
+      "notes": "Legitimate free allowances exist, but the account must have a card on file."
+    }
+  ]
+}
